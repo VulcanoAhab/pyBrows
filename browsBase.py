@@ -23,4 +23,8 @@ class Interface:
         """
         """
         raise NotImplemented()
-        
+
+    def close(self):
+        """
+        """
+        raise NotImplemented()

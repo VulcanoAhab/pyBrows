@@ -49,6 +49,10 @@ class Vanilla(Interface):
         desiredDefaults={
             "webdriver.log.driver":"INFO"
         }
+        #add defaults
+        desired_caps.update(desiredDefaults)
+        desired_caps.update(DesiredCapabilities.PHANTOMJS)
+        service_args.extend(serviceDefaults)
         #start driver
         self._wd=webdriver.PhantomJS(desired_capabilities=desired_caps,
                                      service_args=service_args)
@@ -79,6 +83,11 @@ class Vanilla(Interface):
         """
         self._wd.get(targetUri)
 
+    def close(self):
+        """
+        """
+        self._wd.quit()
+
 
 
 # === browsers type
@@ -86,7 +95,9 @@ class Chrome(Vanilla):
     """
     """
 
-    _headers=chromeForMac.HEADERS
+    _os="mac"
+    _oses={"mac":chromeForMac.HEADERS,}
+    _headers=_oses[_os]
 
     def __init__(self, desired_caps={}, service_args=[], headers={}):
         """
