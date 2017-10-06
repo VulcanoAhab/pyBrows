@@ -83,6 +83,46 @@ class Vanilla(Interface):
         """
         self._wd.get(targetUri)
 
+    def _extract(elements, extractor, targetName=None):
+        """
+        """
+        response=[]
+        if extractor in ["text", "text_content"]:
+            if not targetName:
+                targetName="text"
+            for e in elements:
+                response.append({targetName:e.text})
+        elif extractor == "generic_link":
+            if not targetName:
+                targetName="generic_link"
+            for e in elements:
+                for p in ["src","data-src","href"]:
+                    link=e.get_attribute(p)
+                    if not link:continue
+                    response.append({targetName:link})
+        else:
+            for e in elements:
+                value=e.get_attribute(extractor)
+                if not value:continue
+                if not targetName:
+                    targetName=extractor
+                response.append({targetName:value})
+        return response
+
+    def xpath(self, selector, extractor=None, targetName=None):
+        """
+        """
+        elements=self._wd.find_elements_by_xpath(selector)
+        if  not extractor: return elements
+        return self._extract(elements, extractor, targetName=targetName)
+
+    def elementByName(self, elementName, extractor=None, targetName=None):
+        """
+        """
+        elements=find_elements_by_name(elementName)
+        if  not extractor: return elements
+        return self._extract(elements, extractor, targetName=targetName)
+
     def close(self):
         """
         """
