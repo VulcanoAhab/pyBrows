@@ -1,8 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-from headers import chromeForMac
-from browsBase import Interface
+from .headers import chromeForMac
+from .browsBase import Interface
 
 
 # == browsers base
