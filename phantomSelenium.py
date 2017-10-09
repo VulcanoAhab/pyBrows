@@ -100,7 +100,7 @@ class Vanilla(Interface):
         self._driver_script(headers_script)
 
     @property
-    def page_source(self):
+    def pageSource(self):
         """
         """
         return self._wd.page_source
@@ -109,7 +109,6 @@ class Vanilla(Interface):
         """
         """
         self._wd.get(targetUri)
-
 
     def xpath(self, selector, extractor=None, targetName=None):
         """
@@ -125,22 +124,33 @@ class Vanilla(Interface):
         if  not extractor: return elements
         return self._extract(elements, extractor, targetName=targetName)
 
-    def sendKeysByName(self, elementName, keysToSend, elementIndex=0):
+    def sendKeysByName(self, **data):
         """
         """
+        _reqs=["elementName", "keysToSend"]
+        if not all([e in data for e in _reqs]):
+            raise AttributeError("[-] {} are "\
+                                 "required".format(",".join(_reqs)))
+        elementName=data["elementName"]
+        keysToSend=data["keysToSend"]
+        elementIndex=data.get("elementIndex",0) #default 0
         targetEl=self.elementByName(elementName)
         if targetEl is None:
             raise Exception("[-] Unable to "\
                             "find element: {}".format(elementName))
         targetEl[elementIndex].send_keys(keysToSend)
 
-    def save_screenshot(self, screenshot_path, imgType="png"):
+    def saveScreenshot(self, **data):
         """
         """
-        if imgType == "png":
-            self._wd.save_screenshot(screenshot_path)
-            return
-        raise NotImplemented("[-] Only PNG type implemented so far")
+        if not data.get("ouput"):
+            raise AttributeError("[-] Output is required")
+        imgType=data.get("imgType", "png") #default png
+        if imgType != "png":
+            raise NotImplemented("[-] Only PNG type implemented so far")
+        self._wd.save_screenshot(data["output"])
+
+
 
 
 

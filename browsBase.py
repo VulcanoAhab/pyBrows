@@ -4,7 +4,7 @@ class Interface:
     """
 
     @property
-    def page_source(self):
+    def pageSource(self):
         """
         """
         raise NotImplemented()
@@ -19,7 +19,8 @@ class Interface:
         """
         raise NotImplemented()
 
-    def save_page_source(self, *args, **kwargs):
+
+    def currentUrl(self, *args, **kwargs):
         """
         """
         raise NotImplemented()
@@ -34,13 +35,37 @@ class Interface:
         """
         raise NotImplemented()
 
-    def save_screenshot(self, imgType="base64"):
+    def saveScreenshot(self, **data):
         """
+        params
+        -------
+        output[required] -> filePath or DB
         """
         raise NotImplemented()
 
-    def get_screenshot(self, imgType="base64"):
+    def savePageSource(self, **data):
         """
+        params
+        -------
+        output -> fileName or DB
+        """
+        raise NotImplemented()
+
+    def getScreenshot(self, **data):
+        """
+        params
+        -------
+        imgType -> png, base64. Default:base64
+        """
+        raise NotImplemented()
+
+    def sendKeysByName(self, **data):
+        """
+        params
+        ------
+        elementName[required]
+        keysToSend [required]
+        elementIndex [required]
         """
         raise NotImplemented()
 
