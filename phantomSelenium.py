@@ -11,6 +11,33 @@ class Vanilla(Interface):
     """
     _headers={}
 
+    @staticmethod
+    def _extract(elements, extractor, targetName=None):
+        """
+        """
+        response=[]
+        if extractor in ["text", "text_content"]:
+            if not targetName:
+                targetName="text"
+            for n,e in enumerate(elements):
+                response.append({targetName:e.text, "index":n})
+        elif extractor == "generic_link":
+            if not targetName:
+                targetName="generic_link"
+            for n,e in enumerate(elements):
+                for p in ["src","data-src","href"]:
+                    link=e.get_attribute(p)
+                    if not link:continue
+                    response.append({targetName:link, "index":n})
+        else:
+            for n,e in enumerate(elements):
+                value=e.get_attribute(extractor)
+                if not value:continue
+                if not targetName:
+                    targetName=extractor
+                response.append({targetName:value, "index":n})
+        return response
+
     def __init__(self, desired_caps={}, service_args=[], headers={}):
         """
         """
@@ -83,45 +110,39 @@ class Vanilla(Interface):
         """
         self._wd.get(targetUri)
 
-    def _extract(elements, extractor, targetName=None):
-        """
-        """
-        response=[]
-        if extractor in ["text", "text_content"]:
-            if not targetName:
-                targetName="text"
-            for e in elements:
-                response.append({targetName:e.text})
-        elif extractor == "generic_link":
-            if not targetName:
-                targetName="generic_link"
-            for e in elements:
-                for p in ["src","data-src","href"]:
-                    link=e.get_attribute(p)
-                    if not link:continue
-                    response.append({targetName:link})
-        else:
-            for e in elements:
-                value=e.get_attribute(extractor)
-                if not value:continue
-                if not targetName:
-                    targetName=extractor
-                response.append({targetName:value})
-        return response
 
     def xpath(self, selector, extractor=None, targetName=None):
         """
         """
         elements=self._wd.find_elements_by_xpath(selector)
         if  not extractor: return elements
-        return self._extract(elements, extractor, targetName=targetName)
+        return Vanilla._extract(elements, extractor, targetName=targetName)
 
     def elementByName(self, elementName, extractor=None, targetName=None):
         """
         """
-        elements=find_elements_by_name(elementName)
+        elements=self._wd.find_elements_by_name(elementName)
         if  not extractor: return elements
         return self._extract(elements, extractor, targetName=targetName)
+
+    def sendKeysByName(self, elementName, keysToSend, elementIndex=0):
+        """
+        """
+        targetEl=self.elementByName(elementName)
+        if targetEl is None:
+            raise Exception("[-] Unable to "\
+                            "find element: {}".format(elementName))
+        targetEl[elementIndex].send_keys(keysToSend)
+
+    def save_screenshot(self, screenshot_path, imgType="png"):
+        """
+        """
+        if imgType == "png":
+            self._wd.save_screenshot(screenshot_path)
+            return
+        raise NotImplemented("[-] Only PNG type implemented so far")
+
+
 
     def close(self):
         """

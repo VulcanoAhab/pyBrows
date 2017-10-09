@@ -34,12 +34,12 @@ class Interface:
         """
         raise NotImplemented()
 
-    def save_screenshot(self, format="base64"):
+    def save_screenshot(self, imgType="base64"):
         """
         """
         raise NotImplemented()
 
-    def get_screenshot(self, format="base64"):
+    def get_screenshot(self, imgType="base64"):
         """
         """
         raise NotImplemented()
