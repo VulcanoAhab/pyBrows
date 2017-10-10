@@ -143,16 +143,27 @@ class Vanilla(Interface):
     def saveScreenshot(self, **data):
         """
         """
-        if not data.get("ouput"):
+        if not data.get("output"):
             raise AttributeError("[-] Output is required")
         imgType=data.get("imgType", "png") #default png
         if imgType != "png":
             raise NotImplemented("[-] Only PNG type implemented so far")
         self._wd.save_screenshot(data["output"])
 
+    def savePageSource(self, **data):
+        """
+        """
+        if not data.get("ouput"):
+            raise AttributeError("[-] Output is required")
+        page_source=self.page_source
+        fd=open(data["output"], "w")
+        fd.write(page_source)
+        fd.close()
 
-
-
+    def back(self):
+        """
+        """
+        self._wd.back()
 
     def close(self):
         """
