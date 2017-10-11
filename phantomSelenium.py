@@ -105,6 +105,18 @@ class Vanilla(Interface):
         """
         return self._wd.page_source
 
+    @property
+    def currentUrl(self):
+        """
+        """
+        return self._wd.current_url
+
+    @property
+    def title(self):
+        """
+        """
+        return self._wd.title
+
     def get(self, targetUri):
         """
         """

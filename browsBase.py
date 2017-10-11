@@ -9,18 +9,24 @@ class Interface:
         """
         raise NotImplemented()
 
+    @property
+    def title(self, *args, **kwargs):
+        """
+        """
+        raise NotImplemented()
+        
+    @property
+    def currentUrl(self, *args, **kwargs):
+        """
+        """
+        raise NotImplemented()
+
     def get(self, *args, **kwargs):
         """
         """
         raise NotImplemented()
 
     def post(self, *args, **kwargs):
-        """
-        """
-        raise NotImplemented()
-
-
-    def currentUrl(self, *args, **kwargs):
         """
         """
         raise NotImplemented()
