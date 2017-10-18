@@ -116,6 +116,10 @@ class Vanilla(Interface):
         """
         """
         return self._wd.title
+    def setLoadTimeout(self, timeout=30):
+        """
+        """
+        self._wd.set_page_load_timeout(timeout)
 
     def get(self, targetUri):
         """
@@ -199,3 +203,4 @@ class Chrome(Vanilla):
         super().__init__(desired_caps=desired_caps,
                          service_args=service_args,
                          headers=headers)
+        self.setLoadTimeout() #default to 30s
