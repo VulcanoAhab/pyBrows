@@ -210,4 +210,4 @@ class Chrome(Vanilla):
                          service_args=service_args,
                          headers=headers)
         self.setLoadTimeout() #default to 30s
-        setInteractionTimeout() #default to 30s
+        self.setInteractionTimeout() #default to 30s
