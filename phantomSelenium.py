@@ -182,6 +182,11 @@ class Vanilla(Interface):
         fd.write(page_source)
         fd.close()
 
+    def runConsoleScript(self, scriptIn):
+        """
+        """
+        return self._wd.execute_script(scriptIn)
+
     def back(self):
         """
         """
