@@ -116,10 +116,16 @@ class Vanilla(Interface):
         """
         """
         return self._wd.title
+
     def setLoadTimeout(self, timeout=30):
         """
         """
         self._wd.set_page_load_timeout(timeout)
+
+    def setInteractionTimeout(self, timeout=30):
+        """
+        """
+        self._wd.implicitly_wait(30)
 
     def get(self, targetUri):
         """
@@ -204,3 +210,4 @@ class Chrome(Vanilla):
                          service_args=service_args,
                          headers=headers)
         self.setLoadTimeout() #default to 30s
+        setInteractionTimeout() #default to 30s
