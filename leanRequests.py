@@ -1,13 +1,24 @@
 
-class Interface:
+import requests
+from .browsBase import Interface
+from lxml import html
+
+class Vanilla(Interface):
     """
     """
+    def __init__(self, headers={}):
+        """
+        """
+        self._wd=resquests.Session()
+        self._wd.headers=headers
+        self._res=None
+        self._lx=None
 
     @property
     def pageSource(self):
         """
         """
-        raise NotImplemented()
+        return self._wd.text
 
     @property
     def title(self, *args, **kwargs):
@@ -16,15 +27,21 @@ class Interface:
         raise NotImplemented()
 
     @property
-    def currentUrl(self, *args, **kwargs):
+    def currentUrl(self):
         """
         """
-        raise NotImplemented()
+        return self._res.url
 
-    def get(self, *args, **kwargs):
+    def get(self, url, **kwargs):
         """
         """
-        raise NotImplemented()
+        self._res=self._wd.get(url, **kwargs)
+        #self._lx=html.fromstring(self._res.text)
+
+    def binContent(self):
+        """
+        """
+        return self._res.content
 
     def post(self, *args, **kwargs):
         """
