@@ -227,7 +227,6 @@ class Vanilla(Interface):
 class Chrome(Vanilla):
     """
     """
-
     _os="mac"
     _oses={"mac":chromeForMac.HEADERS,}
     _headers=_oses[_os]
