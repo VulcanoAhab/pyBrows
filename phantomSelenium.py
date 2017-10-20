@@ -1,9 +1,10 @@
 import requests
 from selenium import webdriver
+from .browsBase import Interface
+from .headers import chromeForMac
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-from .headers import chromeForMac
-from .browsBase import Interface
 
 
 # == browsers base
@@ -231,11 +232,12 @@ class Chrome(Vanilla):
     _oses={"mac":chromeForMac.HEADERS,}
     _headers=_oses[_os]
 
-    def __init__(self, desired_caps={}, service_args=[], headers={}):
+    def __init__(self, desired_caps={}, service_args=[], headers={}, **kwargs):
         """
         """
         super().__init__(desired_caps=desired_caps,
                          service_args=service_args,
                          headers=headers)
-        self.setLoadTimeout() #default to 30s
-        self.setInteractionTimeout() #default to 30s
+        if not kwargs.get("noWaits"):
+            self.setLoadTimeout() #default to 30s
+            self.setInteractionTimeout() #default to 30s
