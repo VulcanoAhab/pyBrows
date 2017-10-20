@@ -165,13 +165,12 @@ class Canary(Interface):
         """
         self._wd.get(targetUrl)
         if testForCaptcha:testForCaptcha(self._wd)
-        resolvedUrl=self._wd.current_url
         #time to download
         session = requests.Session()
-        cookies = browser.get_cookies()
+        cookies = self._wd.get_cookies()
         for cookie in cookies:
             session.cookies.set(cookie['name'], cookie['value'])
-        response = session.get(resolvedUrl)
+        response = session.get(targetUrl)
         return response.content
 
     def back(self):
