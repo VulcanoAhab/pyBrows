@@ -9,7 +9,7 @@ class Vanilla(Interface):
     def __init__(self, headers={}):
         """
         """
-        self._wd=resquests.Session()
+        self._wd=requests.Session()
         self._wd.headers=headers
         self._res=None
         self._lx=None

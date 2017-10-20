@@ -1,16 +1,12 @@
 import requests
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
-from .headers import chromeForMac
 from .browsBase import Interface
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# == browsers base
-class Vanilla(Interface):
+class Canary(Interface):
     """
     """
-    _headers={}
 
     @staticmethod
     def _extract(elements, extractor, targetName=None):
@@ -39,66 +35,33 @@ class Vanilla(Interface):
                 response.append({targetName:value, "index":n})
         return response
 
-    def __init__(self, desired_caps={}, service_args=[], headers={}, **kwargs):
+    def __init__(self, binaryPath, arguments, downloadPath):
         """
         """
-        self._startDriver(desired_caps, service_args, **kwargs)
-        if headers:self._setHeaders(headers)
-        elif self._headers:self._setHeaders(self._headers)
+        self._binary=binaryPath
+        self._arguments=arguments
+        self._download=downloadPath
+        self._startDriver()
 
-    def _setHeaders(self, headers):
+    def _startDriver(self):
         """
         """
-        toFilter=['Accept-Encoding',] #avoid phantom bug
-        finalHeaders={k:v for k,v in headers.items()
-                          if k not in toFilter}
-        header_scrit="""
-        this.customHeaders = {headers};
-        """.format(headers=str(headers))
-        self._driver_script(script=header_scrit)
-
-    def _driver_script(self, script, args=[]):
-        """
-        """
-        self._wd.execute('executePhantomScript',
-            {'script': script, 'args': args})
-
-    def _startDriver(self, desired_caps={}, service_args=[]):
-        """
-        options
-        -------
-        --proxy=XXX.XXX.XXX.XXX:PORT
-        --proxy-type=http
-        --web-security=false
-        """
-        serviceDefaults=[
-            '--ignore-ssl-errors=yes',
-        ]
-        desiredDefaults={
-            "webdriver.log.driver":"INFO"
-        }
         #add defaults
-        desired_caps.update(desiredDefaults)
-        desired_caps.update(DesiredCapabilities.PHANTOMJS)
-        service_args.extend(serviceDefaults)
+        options = webdriver.ChromeOptions()
+        options.binary_location=self._binary
+        options.add_experimental_option("prefs", {
+            "download.default_directory": self._download,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "plugins.always_open_pdf_externally": True,
+            "Page.setDownloadBehavior":"allow",
+        })
+        for argument in self._arguments:options.add_argument(argument)
+        options.add_argument("--window-size=1920,1080")
+
         #start driver
-        self._wd=webdriver.PhantomJS(desired_capabilities=desired_caps,
-                                     service_args=service_args)
-        #set window size
-        self._wd.set_window_size(1124, 850)
-        #add command to run scripts on the page env
-        phantom_exc_uri='/session/$sessionId/phantom/execute'
-        cmds=self._wd.command_executor._commands
-        cmds['executePhantomScript'] = ('POST', phantom_exc_uri)
-        #log headers
-        headers_script="""
-        this.onResourceReceived = function(response) {
-            for (var i=0;i<response.headers.length;++i){
-                console.log('#HEADERS', response.headers[i]);
-            }
-        }.bind(this);
-        """
-        self._driver_script(headers_script)
+        self._wd=webdriver.Chrome(chrome_options=options)
+
 
     @property
     def pageSource(self):
@@ -163,15 +126,15 @@ class Vanilla(Interface):
                             "find element: {}".format(elementName))
         targetEl[elementIndex].send_keys(keysToSend)
 
-    def saveScreenshot(self, **data):
+    def saveScreenshot(self, output=None, **data):
         """
         """
-        if not data.get("output"):
+        if not output:
             raise AttributeError("[-] Output is required")
         imgType=data.get("imgType", "png") #default png
         if imgType != "png":
             raise NotImplemented("[-] Only PNG type implemented so far")
-        self._wd.save_screenshot(data["output"])
+        self._wd.save_screenshot(output)
 
     def savePageSource(self, **data):
         """
@@ -219,24 +182,4 @@ class Vanilla(Interface):
     def close(self):
         """
         """
-        self._wd.quit()
-
-
-
-# === browsers type
-class Chrome(Vanilla):
-    """
-    """
-
-    _os="mac"
-    _oses={"mac":chromeForMac.HEADERS,}
-    _headers=_oses[_os]
-
-    def __init__(self, desired_caps={}, service_args=[], headers={}):
-        """
-        """
-        super().__init__(desired_caps=desired_caps,
-                         service_args=service_args,
-                         headers=headers)
-        self.setLoadTimeout() #default to 30s
-        self.setInteractionTimeout() #default to 30s
+        self._wd.close()
