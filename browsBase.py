@@ -75,6 +75,11 @@ class Interface:
         """
         raise NotImplemented()
 
+    def headlessDownloadFile(self, **data):
+        """
+        """
+        raise NotImplemented()
+
     def close(self):
         """
         """
