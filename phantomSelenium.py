@@ -174,6 +174,13 @@ class Vanilla(Interface):
             raise NotImplemented("[-] Only PNG type implemented so far")
         self._wd.save_screenshot(data["output"])
 
+    def getScreenshot(self, imgType="base64"):
+        """
+        """
+        if imgType != "base64":
+            raise NotImplemented("[ONLY BASE64 IMPLEMENTED]")
+        return self._wd.get_screenshot_as_base64()
+
     def savePageSource(self, **data):
         """
         """
@@ -202,7 +209,7 @@ class Vanilla(Interface):
         file binary
         """
         self._wd.get(targetUrl)
-        if testForCaptcha:testForCaptcha(self._wd)
+        if testForCaptcha:testForCaptcha()
         #time to download
         session = requests.Session()
         cookies = self._wd.get_cookies()
