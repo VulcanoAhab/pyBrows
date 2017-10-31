@@ -1,7 +1,7 @@
 import requests
 from selenium import webdriver
-from browsBase import Interface
 from headers import chromeForMac
+import browsBase.Interface as Interface
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
