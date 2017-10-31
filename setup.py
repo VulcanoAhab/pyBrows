@@ -4,8 +4,8 @@ setup(
     name="pyBrows",
     version='0.1.0',
     author="VulcanoAhab",
-    packages=["pybrows"],
-    url="https://github.com/VulcanoAhab/pyBrows",
+    packages=["pyBrows"],
+    url="https://github.com/VulcanoAhab/pyBrows.git",
     description="Browsers Utils",
     install_requires=[
 
