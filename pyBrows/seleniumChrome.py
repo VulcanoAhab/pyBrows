@@ -4,7 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-class Canary(Interface):
+class Headless(Interface):
     """
     """
 
@@ -46,18 +46,18 @@ class Canary(Interface):
     def _startDriver(self):
         """
         """
-        #add defaults
+        # -- download options - testing
+        # options.add_experimental_option("prefs", {
+        #     "download.default_directory": self._download,
+        #     "download.prompt_for_download": False,
+        #     "download.directory_upgrade": True,
+        #     "plugins.always_open_pdf_externally": True,
+        #     "Page.setDownloadBehavior":"allow",
+        # })
         options = webdriver.ChromeOptions()
-        options.binary_location=self._binary
-        options.add_experimental_option("prefs", {
-            "download.default_directory": self._download,
-            "download.prompt_for_download": False,
-            "download.directory_upgrade": True,
-            "plugins.always_open_pdf_externally": True,
-            "Page.setDownloadBehavior":"allow",
-        })
         for argument in self._arguments:options.add_argument(argument)
-        options.add_argument("--window-size=1920,1080")
+        options.add_argument("window-size=1920,1080")
+        options.add_argument("headless")
 
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
@@ -150,28 +150,6 @@ class Canary(Interface):
         """
         """
         return self._wd.execute_script(scriptIn)
-
-    def headlessDownloadFile(self, targetUrl, testForCaptcha=None):
-        """
-        work-around for headless mode
-        -----------------------------
-        testForCaptcha should be a function
-        to deal with captchas :: receives the driver
-        as paramater
-
-        returns
-        --------
-        file binary
-        """
-        self._wd.get(targetUrl)
-        if testForCaptcha:testForCaptcha(self._wd)
-        #time to download
-        session = requests.Session()
-        cookies = self._wd.get_cookies()
-        for cookie in cookies:
-            session.cookies.set(cookie['name'], cookie['value'])
-        response = session.get(targetUrl)
-        return response.content
 
     def back(self):
         """
