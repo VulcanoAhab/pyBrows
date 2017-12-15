@@ -58,6 +58,8 @@ class Headless(Interface):
         for argument in self._arguments:options.add_argument(argument)
         options.add_argument("window-size=1920,1080")
         options.add_argument("headless")
+        options.add_argument("no-sandbox")
+        options.add_argument("disable-gpu")
 
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
