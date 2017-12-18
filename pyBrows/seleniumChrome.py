@@ -184,6 +184,11 @@ class Headless(Interface):
         """
         return self._wd.execute_script(scriptIn)
 
+    def clickByJS(self, element, **kwargs):
+        """
+        """
+        self.browser.execute_script("arguments[0].click()", element)
+
     def back(self):
         """
         """
