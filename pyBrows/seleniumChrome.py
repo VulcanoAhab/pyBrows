@@ -1,4 +1,6 @@
 import requests
+import datetime
+import collections
 from .browsBase import Interface
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -7,7 +9,6 @@ from selenium.webdriver.chrome.options import Options
 class Headless(Interface):
     """
     """
-
     @staticmethod
     def _extract(elements, extractor, targetName=None):
         """
@@ -35,12 +36,14 @@ class Headless(Interface):
                 response.append({targetName:value, "index":n})
         return response
 
-    def __init__(self, binaryPath, arguments, downloadPath):
+    def __init__(self, *args, **kwargs):
         """
         """
-        self._binary=binaryPath
-        self._arguments=arguments
-        self._download=downloadPath
+        self._history=collections.defaultdict(list)
+        self._getCount=0
+        self._arguments=args
+        self._binary=kwargs.get("binaryPath")
+        self._download=kwargs.get("downloadPath")
         self._startDriver()
 
     def _startDriver(self):
@@ -60,6 +63,7 @@ class Headless(Interface):
         options.add_argument("headless")
         options.add_argument("no-sandbox")
         options.add_argument("disable-gpu")
+        options.add_argument("disable-web-security")
 
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
@@ -83,6 +87,25 @@ class Headless(Interface):
         """
         return self._wd.title
 
+    @property
+    def cookies(self):
+        """
+        """
+        return self._wd.get_cookies()
+
+    @property
+    def history(self):
+        """ 
+        """ 
+        return self._history
+
+    @property
+    def clear_history(self):
+        """ 
+        """ 
+        self._history={}
+        return True
+
     def setLoadTimeout(self, timeout=30):
         """
         """
@@ -97,6 +120,14 @@ class Headless(Interface):
         """
         """
         self._wd.get(targetUri)
+        _url=self._wd.current_url
+        _cookies=self._wd.get_cookies()
+        self._getCount+=1
+        self._history[targetUri].append({
+            "url":_url,
+            "cookies":_cookies,
+            "getCount":self._getCount
+        })
 
     def xpath(self, selector, extractor=None, targetName=None):
         """
