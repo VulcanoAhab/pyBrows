@@ -93,12 +93,10 @@ class Vanilla(Interface):
         cmds['executePhantomScript'] = ('POST', phantom_exc_uri)
         #log headers
         headers_script="""
-        this.onResourceReceived = function(response) {
-            for (var i=0;i<response.headers.length;++i){
-                console.log('#HEADERS', response.headers[i]);
-            }
-        }.bind(this);
-        """
+            this.onResourceReceived = function(response) {
+            this.browserLog.push({"_HEADERS":response.headers});
+            }.bind(this);
+            """
         self._driver_script(headers_script)
 
     @property
@@ -118,6 +116,12 @@ class Vanilla(Interface):
         """
         """
         return self._wd.title
+
+    @property
+    def response_headers(self):
+        """
+        """
+        return self._wd.get_log("browser")
 
     def setLoadTimeout(self, timeout=30):
         """
