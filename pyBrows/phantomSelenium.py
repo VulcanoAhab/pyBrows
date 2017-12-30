@@ -2,6 +2,7 @@ import requests
 from selenium import webdriver
 from pyBrows.headers import chromeForMac
 from  pyBrows.browsBase import Interface
+from pyBrows.headers.fields import values as defaulHeaders
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
@@ -46,11 +47,13 @@ class Vanilla(Interface):
         self._startDriver(desired_caps, service_args, **kwargs)
         if headers:self._setHeaders(headers)
         elif self._headers:self._setHeaders(self._headers)
+        self._responseHeader={}
+        self._status_code=None
 
     def _setHeaders(self, headers):
         """
         """
-        toFilter=['Accept-Encoding',] #avoid phantom bug
+        toFilter=["Accept-Encoding",] #avoid phantom bug
         finalHeaders={k:v for k,v in headers.items()
                           if k not in toFilter}
         header_scrit="""
@@ -61,8 +64,8 @@ class Vanilla(Interface):
     def _driver_script(self, script, args=[]):
         """
         """
-        self._wd.execute('executePhantomScript',
-            {'script': script, 'args': args})
+        self._wd.execute("executePhantomScript",
+            {"script": script, "args": args})
 
     def _startDriver(self, desired_caps={}, service_args=[]):
         """
@@ -73,7 +76,7 @@ class Vanilla(Interface):
         --web-security=false
         """
         serviceDefaults=[
-            '--ignore-ssl-errors=yes',
+            "--ignore-ssl-errors=yes",
         ]
         desiredDefaults={
             "webdriver.log.driver":"INFO"
@@ -88,13 +91,16 @@ class Vanilla(Interface):
         #set window size
         self._wd.set_window_size(1124, 850)
         #add command to run scripts on the page env
-        phantom_exc_uri='/session/$sessionId/phantom/execute'
+        phantom_exc_uri="/session/$sessionId/phantom/execute"
         cmds=self._wd.command_executor._commands
-        cmds['executePhantomScript'] = ('POST', phantom_exc_uri)
+        cmds["executePhantomScript"] = ("POST", phantom_exc_uri)
         #log headers
         headers_script="""
             this.onResourceReceived = function(response) {
-            this.browserLog.push({"_HEADERS":response.headers});
+                var _headers=response.headers;
+                var _status=response.status;
+                var _headersLog={"phantom_headers":{"values":_headers,"status":_status}};
+                this.browserLog.push(_headersLog);
             }.bind(this);
             """
         self._driver_script(headers_script)
@@ -121,7 +127,13 @@ class Vanilla(Interface):
     def response_headers(self):
         """
         """
-        return self._wd.get_log("browser")
+        return self._responseHeader
+
+    @property
+    def status_code(self):
+        """
+        """
+        return self._status_code
 
     def setLoadTimeout(self, timeout=30):
         """
@@ -136,7 +148,20 @@ class Vanilla(Interface):
     def get(self, targetUri):
         """
         """
+        self._responseHeader={}
+        self._status_code=None
         self._wd.get(targetUri)
+        ## get log for request
+        console=self._wd.get_log("browser")
+        for obj in console:
+            if not "phantom_headers" in obj:continue
+            headers=obj["phantom_headers"]
+            for headerDict in headers["values"]:
+                self._responseHeader.update(
+                    {headerDict["name"]:headerDict["value"]})
+                self._status_code=headers["status"]
+            break
+        
 
     def xpath(self, selector, extractor=None, targetName=None):
         """
