@@ -1,8 +1,8 @@
 import requests
 import datetime
 import collections
-from .browsBase import Interface
 from selenium import webdriver
+from .browsBase import Interface
 from selenium.webdriver.chrome.options import Options
 
 
@@ -44,6 +44,8 @@ class Headless(Interface):
         self._arguments=args
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
+        self._proxy=kwargs.get("proxy")
+
         self._startDriver()
 
     def _startDriver(self):
@@ -64,6 +66,15 @@ class Headless(Interface):
         options.add_argument("no-sandbox")
         options.add_argument("disable-gpu")
         options.add_argument("disable-web-security")
+        if self._proxy:
+            #options.add_argument("user-data-dir=/path/to/your/custom/profile")
+            #proxy vars -> schema, server, port, username, password
+            if "username" in self._proxy:
+                url="{schema}://{username}:"\
+                    "{password}@{host}:{port}".format(**self._proxy)
+            else:
+                url="{schema}://{host}:{port}".format(**self._proxy)
+            options.add_argument("--proxy-server={}".format(url))
 
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
@@ -95,14 +106,14 @@ class Headless(Interface):
 
     @property
     def history(self):
-        """ 
-        """ 
+        """
+        """
         return self._history
 
     @property
     def clear_history(self):
-        """ 
-        """ 
+        """
+        """
         self._history={}
         return True
 
