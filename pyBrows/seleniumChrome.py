@@ -66,19 +66,20 @@ class Headless(Interface):
         options.add_argument("no-sandbox")
         options.add_argument("disable-gpu")
         options.add_argument("disable-web-security")
+        options.add_argument("--enable-logging")
+        options.add_argument("--verbose")
+        options.add_argument("--log-path=/tmp/chromedriver.log")
         if self._proxy:
-            #options.add_argument("user-data-dir=/path/to/your/custom/profile")
-            #proxy vars -> schema, server, port, username, password
             if "username" in self._proxy:
+                #doesn't work yet - chromiun doesn't support
+                print("[-] Chromiun doens't support auth proxy")
                 url="{schema}://{username}:"\
                     "{password}@{host}:{port}".format(**self._proxy)
             else:
                 url="{schema}://{host}:{port}".format(**self._proxy)
             options.add_argument("--proxy-server={}".format(url))
-
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
-
 
     @property
     def pageSource(self):
