@@ -46,6 +46,7 @@ class Headless(Interface):
         self._download=kwargs.get("downloadPath")
         self._proxy=kwargs.get("proxy")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
+        self.__user_data_dir=kawrgs.get("user_data_dir")
 
 
         self._startDriver()
@@ -72,6 +73,10 @@ class Headless(Interface):
                              " Mac OS X 10_13_4) AppleWebKit/537.36"\
                              " (KHTML, like Gecko) Chrome/67.0.3396.87"\
                              " Safari/537.36")
+        #create profile
+        if self._user_data_dir:
+            options.add_argument("--user-data-dir={}".format(
+                                            self._user_data_dir))
         if self._proxy:
             if "username" in self._proxy:
                 #doesn't work yet - chromiun doesn't support
