@@ -54,14 +54,6 @@ class Headless(Interface):
     def _startDriver(self):
         """
         """
-        # -- download options - testing
-        # options.add_experimental_option("prefs", {
-        #     "download.default_directory": self._download,
-        #     "download.prompt_for_download": False,
-        #     "download.directory_upgrade": True,
-        #     "plugins.always_open_pdf_externally": True,
-        #     "Page.setDownloadBehavior":"allow",
-        # })
         options = webdriver.ChromeOptions()
         for argument in self._arguments:options.add_argument(argument)
         options.add_argument("window-size=1920,1080")
@@ -149,6 +141,8 @@ class Headless(Interface):
         _url=self._wd.current_url
         _cookies=self._wd.get_cookies()
         self._getCount+=1
+        if not targetUri in self._history:
+            self._history[targetUri]=[]
         self._history[targetUri].append({
             "url":_url,
             "cookies":_cookies,
