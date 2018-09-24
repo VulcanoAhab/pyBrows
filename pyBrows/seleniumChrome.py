@@ -82,6 +82,9 @@ class Headless(Interface):
                 url="{schema}://{host}:{port}".format(**self._proxy)
             options.add_argument("--proxy-server={}".format(url))
         if self._remote_debugging_port:
+            options.setExperimentalOption("debuggerAddress",
+                                            "127.0.0.1:{}".format(
+                                            self._remote_debugging_port))
             options.add_argument("--remote-debugging-port={}".format(
                                                 self._remote_debugging_port))
         #start driver
