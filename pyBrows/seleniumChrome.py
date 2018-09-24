@@ -45,7 +45,7 @@ class Headless(Interface):
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
         self._proxy=kwargs.get("proxy")
-        self._devTools=kwargs.get("devTools")
+        self._remote_debugging_port=kwargs.get("remote_debugging_port")
 
 
         self._startDriver()
@@ -81,8 +81,9 @@ class Headless(Interface):
             else:
                 url="{schema}://{host}:{port}".format(**self._proxy)
             options.add_argument("--proxy-server={}".format(url))
-        if self._devTools:
-            options.add_argument("--remote-debugging-port=9922")
+        if self._remote_debugging_port:
+            options.add_argument("--remote-debugging-port={}".format(
+                                                self._remote_debugging_port))
         #start driver
         self._wd=webdriver.Chrome(chrome_options=options)
 
