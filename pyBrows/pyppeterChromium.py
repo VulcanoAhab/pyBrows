@@ -28,3 +28,17 @@ class Headless(Interface):
             options["userDataDir"]=_USER_DIR
         self._browser = await launch(options)
         self._page = await self._browser.newPage()
+        self._page.setUserAgent(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) "\
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
+            "Safari/537.36")
+
+    def get(self, targetUri):
+        """
+        """
+        self._page.goto(targetUri)
+
+    def close(self):
+        """
+        """
+        self._browser.close()
