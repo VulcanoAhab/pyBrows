@@ -15,8 +15,7 @@ class Headless(Interface):
         self._proxy=kwargs.get("proxy")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
         self._user_data_dir=kwargs.get("user_data_dir")
-
-        self._startDriver()
+        asyncio.get_event_loop().run_until_complete(self._startDriver())
 
     def _startDriver(self):
         """
