@@ -41,3 +41,13 @@ class Headless(Interface):
         """
         """
         self._browser.close()
+
+    def sequence(self):
+        """
+        """
+        raise NotImplement()
+
+    def run(self):
+        """
+        """
+        asyncio.get_event_loop().run_until_complete(self.sequence)
