@@ -9,13 +9,13 @@ class Headless(Interface):
     def __init__(self, *args, **kwargs):
         """
         """
+        self._browser=None
         self._arguments=args
         self._proxy=kwargs.get("proxy")
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
         self._user_data_dir=kwargs.get("user_data_dir")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
-        self._startDriver()
 
     def _startDriver(self):
         """
@@ -35,6 +35,8 @@ class Headless(Interface):
     def get(self, targetUri):
         """
         """
+        if not self._browser:
+            self._startDriver()
         self._page.goto(targetUri)
 
     def close(self):
