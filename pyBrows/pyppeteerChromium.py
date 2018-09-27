@@ -5,7 +5,7 @@ import collections
 
 from pyppeteer import launch
 from functools import partial
-from browsBase import Interface
+from .browsBase import Interface
 
 class Headless(Interface):
     """
@@ -74,16 +74,25 @@ class Headless(Interface):
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
             "Safari/537.36")
 
-    async def async_page_source(self):
-        """
-        """
-        return await self._page.content()
-
     @property
     def currentUrl(self):
         """
         """
         return  self._page.url
+
+    @property
+    def title(self):
+        """
+        """
+        if (not self._page.url in self._title
+           or not self._title[self._page.url]):
+           self.page_title()
+        return self._title[self._page.url]
+
+    async def async_page_source(self):
+        """
+        """
+        return await self._page.content()
 
     async def async_page_title(self):
         """
