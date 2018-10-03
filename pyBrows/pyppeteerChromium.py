@@ -124,6 +124,13 @@ class Headless(Interface):
         """
         await self._page.goto(targetUri)
 
+    async def async_evaluate_onelement(self, js_content, elementResult):
+        """
+        """
+        element=elementResult["element"]
+        value = await self._page.evaluate(js_content,element)
+        elementResult["value"]=value
+
     async def async_xpath(self, xpath_pattern, target_value=None):
         """
         """
@@ -131,14 +138,15 @@ class Headless(Interface):
         if not target_value:
             for n,element in enumerate(elements):
                 self._results.append({
-                    "value":element,
+                    "element":element,
                     "target_value":target_value,
                     "selector":xpath_pattern,
                     "index":n,
                 })
-        elif target_value and target_value == "text_content":
+            return
+        if target_value and target_value == "text_content":
             js_content="(element) => element.textContent"
-        elif target_value and target_value == "href":
+        if target_value and target_value == "href":
             js_content="(element) => element.getAttribute('href')"
         for n,element in enumerate(elements):
             value = await self._page.evaluate(js_content,element)
