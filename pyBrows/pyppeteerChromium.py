@@ -158,4 +158,5 @@ class Headless(Interface):
     async def async_close(self):
         """
         """
+        await self._page.close()
         await self._browser.close()
