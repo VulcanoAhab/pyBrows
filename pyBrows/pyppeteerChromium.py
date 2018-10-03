@@ -20,6 +20,7 @@ class Headless(Interface):
         """
         """
         self._title={}
+        self._source={}
         self._cookies={}
         self._results=[]
         self._browser=None
@@ -92,7 +93,7 @@ class Headless(Interface):
     async def async_page_source(self):
         """
         """
-        return await self._page.content()
+        self._source[self._page.url]= await self._page.content()
 
     async def async_page_title(self):
         """
@@ -126,23 +127,35 @@ class Headless(Interface):
     async def async_xpath(self, xpath_pattern, target_value=None):
         """
         """
-        if target_value and target_value == "text_content":
-            js_content="(element) => element.textContent"
-            elements=await self._page.xpath(xpath_pattern)
+        elements=await self._page.xpath(xpath_pattern)
+        if not target_value:
             for n,element in enumerate(elements):
-                text = await self._page.evaluate(js_content,element)
                 self._results.append({
-                    "value":text,
+                    "value":element,
                     "target_value":target_value,
                     "selector":xpath_pattern,
                     "index":n,
                 })
-        else:
-            return await self._page.xpath(xpath_pattern)
+        elif target_value and target_value == "text_content":
+            js_content="(element) => element.textContent"
+        elif target_value and target_value == "href":
+            js_content="(element) => element.getAttribute('href')"
+        for n,element in enumerate(elements):
+            value = await self._page.evaluate(js_content,element)
+            self._results.append({
+                "value":value,
+                "target_value":target_value,
+                "selector":xpath_pattern,
+                "index":n,
+            })
 
-
-    def close(self):
+    def results_by_selector(self, selector_pattern):
         """
         """
-        self._browser.close()
-        self._loop.close()
+        return [ r for r in self._results
+                 if r["selector"]==selector_pattern]
+
+    async def async_close(self):
+        """
+        """
+        await self._browser.close()
