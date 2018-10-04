@@ -70,6 +70,7 @@ class Headless(Interface):
             options["userDataDir"]=self._user_data_dir
         self._browser = await launch(options)
         self._page = await self._browser.newPage()
+        self._page.setDefaultNavigationTimeout(60000)
         await self._page.setUserAgent(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) "\
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
@@ -90,6 +91,13 @@ class Headless(Interface):
            self.page_title()
         return self._title[self._page.url]
 
+    async def async_renew_page(self):
+        """
+        """
+        await self._page.close()
+        self._page = await self._browser.newPage()
+        self._page.setDefaultNavigationTimeout(60000)
+
     async def async_page_source(self):
         """
         """
@@ -107,10 +115,10 @@ class Headless(Interface):
         if not self._page.url in self._cookies:
             self._cookies[self._page.url]==await self._page.cookies()
 
-    async def async_saveScreenshot(self, output, **data):
+    async def async_saveScreenshot(self, output):
         """
         """
-        out_form=data.get("output_format", "png") #default png
+        out_form=output.split(".")[-1].strip()
         if out_form not in  ["png", "pdf"]:
             msg="[-] Only PNG and PDF formats implemented so far"
             raise NotImplemented(msg)
@@ -119,17 +127,16 @@ class Headless(Interface):
         else:
             await self._page.pdf({"path": output})
 
-    async def async_get(self, targetUri):
+    async def async_get(self, targetUri, options={}):
         """
         """
-        await self._page.goto(targetUri)
+        await self._page.goto(targetUri, options)
 
-    async def async_evaluate_onElement(self, js_content, elementResult):
+    async def async_click_onElement(self, xpath_pattern):
         """
         """
-        element=elementResult["element"]
-        value = await self._page.evaluate(js_content,element)
-        elementResult["value"]=value
+        element=await self._page.xpath(xpath_pattern)
+        await self._page.evaluate("(element) => element.click()", element[0])
 
     async def async_evaluate(self, js_content, js_id):
         """
@@ -140,6 +147,15 @@ class Headless(Interface):
             "js_id":js_id,
             "selector":None,
         })
+
+    async def async_evaluate_onElement(self, js_content, elementResult):
+        """
+        """
+        element=elementResult["element"]
+        value = await self._page.evaluate(js_content,element)
+        elementResult["value"]=value
+
+
 
     async def async_evaluate_onElements(self, xpath_pattern, js_content):
         """
@@ -187,7 +203,13 @@ class Headless(Interface):
         """
         """
         return [ r for r in self._results
-                 if r["selector"]==selector_pattern]
+                 if r.get("selector", "empty")==selector_pattern]
+
+    def results_by_js_id(self, js_id):
+        """
+        """
+        return [ r for r in self._results
+                 if r.get("js_id",0)==js_id]
 
     async def async_close(self):
         """
