@@ -124,12 +124,36 @@ class Headless(Interface):
         """
         await self._page.goto(targetUri)
 
-    async def async_evaluate_onelement(self, js_content, elementResult):
+    async def async_evaluate_onElement(self, js_content, elementResult):
         """
         """
         element=elementResult["element"]
         value = await self._page.evaluate(js_content,element)
         elementResult["value"]=value
+
+    async def async_evaluate(self, js_content, js_id):
+        """
+        """
+        value = await self._page.evaluate(js_content)
+        self._results.append({
+            "value":value,
+            "js_id":js_id,
+            "selector":None,
+        })
+
+    async def async_evaluate_onElements(self, xpath_pattern, js_content):
+        """
+        """
+        elements=await self._page.xpath(xpath_pattern)
+        for n,element in enumerate(elements):
+            value = await self._page.evaluate(js_content,element)
+            self._results.append({
+                "value":value,
+                "target_value":None,
+                "selector":xpath_pattern,
+                "js_id":None,
+                "index":n,
+            })
 
     async def async_xpath(self, xpath_pattern, target_value=None):
         """
@@ -141,6 +165,7 @@ class Headless(Interface):
                     "element":element,
                     "target_value":target_value,
                     "selector":xpath_pattern,
+                    "js_id":None,
                     "index":n,
                 })
             return
@@ -154,6 +179,7 @@ class Headless(Interface):
                 "value":value,
                 "target_value":target_value,
                 "selector":xpath_pattern,
+                "js_id":None,
                 "index":n,
             })
 
