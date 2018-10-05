@@ -10,6 +10,9 @@ from .browsBase import Interface
 class Headless(Interface):
     """
     """
+
+    _timeout=30000
+
     @staticmethod
     def _async_trigger(event_exec, target_fn, *args, **kwargs):
         """
@@ -23,11 +26,13 @@ class Headless(Interface):
         self._source={}
         self._cookies={}
         self._results=[]
+        self._handles={}
         self._browser=None
         self._arguments=args
         self._proxy=kwargs.get("proxy")
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
+        self._headless=kwargs.get("headless", True)
         self._user_data_dir=kwargs.get("user_data_dir")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
         self._loop=asyncio.get_event_loop()
@@ -58,10 +63,15 @@ class Headless(Interface):
         """
         """
         options={
-            "headless":True,
+            "headless":self._headless,
             "args":[
-                "--window-size=1920,1080",
-
+                # "--proxy-server='direct://",
+                # "--proxy-bypass-list=*",
+                # "--no-sandbox",
+                # "--disable-setuid-sandbox",
+                # "--ignore-certificate-errors",
+                "--disable-web-security",
+                "--no-sandbox",
             ]
         }
         if self._binary:
@@ -70,7 +80,8 @@ class Headless(Interface):
             options["userDataDir"]=self._user_data_dir
         self._browser = await launch(options)
         self._page = await self._browser.newPage()
-        self._page.setDefaultNavigationTimeout(60000)
+        self._page.setDefaultNavigationTimeout(self._timeout)
+        await self._page.setViewport({"width":960,"height":800})
         await self._page.setUserAgent(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) "\
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
@@ -94,9 +105,10 @@ class Headless(Interface):
     async def async_renew_page(self):
         """
         """
-        await self._page.close()
+        if not self._page.isClosed():
+            await self._page.close()
         self._page = await self._browser.newPage()
-        self._page.setDefaultNavigationTimeout(60000)
+        self._page.setDefaultNavigationTimeout(self._timeout)
 
     async def async_page_source(self):
         """
@@ -132,11 +144,16 @@ class Headless(Interface):
         """
         await self._page.goto(targetUri, options)
 
+    async def async_go_back(self):
+        """
+        """
+        await self._page.goBack()
+
     async def async_click_onElement(self, xpath_pattern):
         """
         """
-        element=await self._page.xpath(xpath_pattern)
-        await self._page.evaluate("(element) => element.click()", element[0])
+        elements=await self._page.xpath(xpath_pattern)
+        await self._page.evaluate("(element) => element.click()", elements[0])
 
     async def async_evaluate(self, js_content, js_id):
         """
@@ -148,14 +165,24 @@ class Headless(Interface):
             "selector":None,
         })
 
-    async def async_evaluate_onElement(self, js_content, elementResult):
+    async def async_evaluate_handle(self, js_content, js_id):
         """
         """
-        element=elementResult["element"]
-        value = await self._page.evaluate(js_content,element)
-        elementResult["value"]=value
+        value=await self._page.evaluateHandle(js_content)
+        self._handles[js_id]=value
 
-
+    async def async_evaluate_onElement(self, xpath_pattern, js_content):
+        """
+        """
+        elements=await self._page.xpath(xpath_pattern)
+        value = await self._page.evaluate(js_content,elements[0])
+        self._results.append({
+            "value":value,
+            "target_value":None,
+            "selector":xpath_pattern,
+            "js_id":None,
+            "index":0,
+        })
 
     async def async_evaluate_onElements(self, xpath_pattern, js_content):
         """
@@ -214,5 +241,6 @@ class Headless(Interface):
     async def async_close(self):
         """
         """
-        await self._page.close()
+        if not self._page.isClosed():
+            await self._page.close()
         await self._browser.close()
