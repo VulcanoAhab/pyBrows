@@ -152,8 +152,17 @@ class Headless(Interface):
     async def async_click_onElement(self, xpath_pattern):
         """
         """
+        action="fail"
+        action="sucess"
         elements=await self._page.xpath(xpath_pattern)
-        await self._page.evaluate("(element) => element.click()", elements[0])
+        if elements:
+            action="sucess"
+            await self._page.evaluate("(element) => element.click()",
+                                                        elements[0])
+        self._results.append({
+            "click":action,
+            "selector":xpath_pattern,
+        })
 
     async def async_evaluate(self, js_content, js_id):
         """
