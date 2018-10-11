@@ -184,33 +184,36 @@ class Headless(Interface):
         """
         """
         elements=await self._page.xpath(xpath_pattern)
-        value = await self._page.evaluate(js_content,elements[0])
-        self._results.append({
-            "value":value,
-            "target_value":None,
-            "selector":xpath_pattern,
-            "js_id":None,
-            "index":0,
-        })
-
-    async def async_evaluate_onElements(self, xpath_pattern, js_content):
-        """
-        """
-        elements=await self._page.xpath(xpath_pattern)
-        for n,element in enumerate(elements):
-            value = await self._page.evaluate(js_content,element)
+        if elements:
+            value = await self._page.evaluate(js_content,elements[0])
             self._results.append({
                 "value":value,
                 "target_value":None,
                 "selector":xpath_pattern,
                 "js_id":None,
-                "index":n,
+                "index":0,
             })
+
+    async def async_evaluate_onElements(self, xpath_pattern, js_content):
+        """
+        """
+        elements=await self._page.xpath(xpath_pattern)
+        if elements:
+            for n,element in enumerate(elements):
+                value = await self._page.evaluate(js_content,element)
+                self._results.append({
+                    "value":value,
+                    "target_value":None,
+                    "selector":xpath_pattern,
+                    "js_id":None,
+                    "index":n,
+                })
 
     async def async_xpath(self, xpath_pattern, target_value=None):
         """
         """
         elements=await self._page.xpath(xpath_pattern)
+        if not elements:return
         if not target_value:
             for n,element in enumerate(elements):
                 self._results.append({
