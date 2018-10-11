@@ -25,7 +25,6 @@ class Headless(Interface):
         self._title={}
         self._source={}
         self._cookies={}
-        self._results=[]
         self._handles={}
         self._browser=None
         self._arguments=args
@@ -35,6 +34,7 @@ class Headless(Interface):
         self._headless=kwargs.get("headless", True)
         self._user_data_dir=kwargs.get("user_data_dir")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
+        self._results=collections.defaultdict(list)
         self._loop=asyncio.get_event_loop()
         self._build_methods()
         self._startDriver()
@@ -57,7 +57,7 @@ class Headless(Interface):
             "url":self._page.url,
             "dateTime":datetime.datetime.utcnow().isoformat(),
         })
-        self._results.append(resultDict)
+        self._results[self._page.url].append(resultDict)
 
     async def async__startDriver(self):
         """
@@ -102,6 +102,16 @@ class Headless(Interface):
            self.page_title()
         return self._title[self._page.url]
 
+    @property
+    def pageSource(self):
+        """
+        """
+        if (not self._page.url in self._source
+           or not self._source[self._page.url]):
+           self.page_source()
+        return self._source[self._page.url]
+
+
     async def async_renew_page(self):
         """
         """
@@ -113,7 +123,9 @@ class Headless(Interface):
     async def async_page_source(self):
         """
         """
-        self._source[self._page.url]= await self._page.content()
+        if not self._page.url in self._source:
+            self._source[self._page.url]= await self._page.content()
+
 
     async def async_page_title(self):
         """
@@ -159,7 +171,7 @@ class Headless(Interface):
             await self._page.evaluate("(element) => element.click()",
                                                         elements[0])
             await self._page.waitForNavigation()
-        self._results.append({
+        self._results[self._page.url].append({
             "click":action,
             "selector":xpath_pattern,
         })
@@ -168,7 +180,7 @@ class Headless(Interface):
         """
         """
         value = await self._page.evaluate(js_content)
-        self._results.append({
+        self._results[self._page.url].append({
             "value":value,
             "js_id":js_id,
             "selector":None,
@@ -186,7 +198,7 @@ class Headless(Interface):
         elements=await self._page.xpath(xpath_pattern)
         if elements:
             value = await self._page.evaluate(js_content,elements[0])
-            self._results.append({
+            self._results[self._page.url].append({
                 "value":value,
                 "target_value":None,
                 "selector":xpath_pattern,
@@ -201,7 +213,7 @@ class Headless(Interface):
         if elements:
             for n,element in enumerate(elements):
                 value = await self._page.evaluate(js_content,element)
-                self._results.append({
+                self._results[self._page.url].append({
                     "value":value,
                     "target_value":None,
                     "selector":xpath_pattern,
@@ -216,7 +228,7 @@ class Headless(Interface):
         if not elements:return
         if not target_value:
             for n,element in enumerate(elements):
-                self._results.append({
+                self._results[self._page.url].append({
                     "element":element,
                     "target_value":target_value,
                     "selector":xpath_pattern,
@@ -230,7 +242,7 @@ class Headless(Interface):
             js_content="(element) => element.getAttribute('href')"
         for n,element in enumerate(elements):
             value = await self._page.evaluate(js_content,element)
-            self._results.append({
+            self._results[self._page.url].append({
                 "value":value,
                 "target_value":target_value,
                 "selector":xpath_pattern,
@@ -241,13 +253,13 @@ class Headless(Interface):
     def results_by_selector(self, selector_pattern):
         """
         """
-        return [ r for r in self._results
+        return [ r for r in self._results[self._page.url]
                  if r.get("selector", "empty")==selector_pattern]
 
     def results_by_js_id(self, js_id):
         """
         """
-        return [ r for r in self._results
+        return [ r for r in self._results[self._page.url]
                  if r.get("js_id",0)==js_id]
 
     async def async_close(self):
