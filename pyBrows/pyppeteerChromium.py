@@ -153,12 +153,12 @@ class Headless(Interface):
         """
         """
         action="fail"
-        action="sucess"
         elements=await self._page.xpath(xpath_pattern)
         if elements:
             action="sucess"
             await self._page.evaluate("(element) => element.click()",
                                                         elements[0])
+            await self._page.waitForNavigation()
         self._results.append({
             "click":action,
             "selector":xpath_pattern,
