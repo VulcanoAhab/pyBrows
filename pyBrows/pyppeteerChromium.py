@@ -3,9 +3,11 @@ import asyncio
 import datetime
 import collections
 
+from string import Template
 from pyppeteer import launch
 from functools import partial
 from .browsBase import Interface
+from pyppeteer.errors import NetworkError
 
 class Headless(Interface):
     """
@@ -161,20 +163,47 @@ class Headless(Interface):
         """
         await self._page.goBack()
 
-    async def async_click_onElement(self, xpath_pattern):
+    async def async_click_onElement(self, xpath_pattern,
+                                          not_hrefs=[],
+                                          only_first=True):
         """
         """
         action="fail"
+        js_base=Template("""
+        function(element){
+            var not_hrefs=$not_hrefs;
+            var href=element.getAttribute("href");
+            if (not_hrefs && not_hrefs.indexOf(href) > -1) {
+                return {
+                    "status":"not_done",
+                    "msg":"Has not_ref: "+href}
+            }
+            element.click();
+        }
+        """)
+        js_click=js_base.substitute(not_hrefs=not_hrefs)
         elements=await self._page.xpath(xpath_pattern)
         if elements:
-            action="sucess"
-            await self._page.evaluate("(element) => element.click()",
-                                                        elements[0])
-            await self._page.waitForNavigation()
-        self._results[self._page.url].append({
-            "click":action,
-            "selector":xpath_pattern,
-        })
+            for n,element in enumerate(elements):
+
+                failDict=await self._page.evaluate(js_click, element)
+                if not failDict:
+                    await self._page.waitForNavigation()
+                    action="sucess"
+                self._results[self._page.url].append({
+                    "click":action,
+                    "selector":xpath_pattern,
+                    "index":n
+                    })
+
+                if only_first:break
+                action="fail"
+
+        else:
+            self._results[self._page.url].append({
+                "click":action,
+                "selector":xpath_pattern,
+                })
 
     async def async_evaluate(self, js_content, js_id):
         """
