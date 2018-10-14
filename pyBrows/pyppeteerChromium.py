@@ -165,6 +165,7 @@ class Headless(Interface):
 
     async def async_click_onElement(self, xpath_pattern,
                                           not_hrefs=[],
+                                          not_hrefs_patterns=[],
                                           only_first=True):
         """
         """
@@ -172,16 +173,29 @@ class Headless(Interface):
         js_base=Template("""
         function(element){
             var not_hrefs=$not_hrefs;
+            var not_hrefs_patterns=$not_hrefs_patterns;
             var href=element.getAttribute("href");
             if (not_hrefs && not_hrefs.indexOf(href) > -1) {
                 return {
                     "status":"not_done",
                     "msg":"Has not_ref: "+href}
             }
+            if (not_hrefs_patterns){
+                for (i=0;i<not_hrefs_patterns.length;++i){
+                    var pattern=not_hrefs_patterns[i];
+                    if (href.indexOf(pattern) > -1) {
+                        return {
+                        "status":"not_done",
+                        "msg":"Has not_href_pattern: "+pattern
+                        }
+                    }
+                }
+            }
             element.click();
         }
         """)
-        js_click=js_base.substitute(not_hrefs=not_hrefs)
+        js_click=js_base.substitute(not_hrefs=not_hrefs,
+                                    not_hrefs_patterns=not_hrefs_patterns)
         elements=await self._page.xpath(xpath_pattern)
         if elements:
             for n,element in enumerate(elements):
@@ -193,7 +207,8 @@ class Headless(Interface):
                 self._results[self._page.url].append({
                     "click":action,
                     "selector":xpath_pattern,
-                    "index":n
+                    "index":n,
+                    "failDict":failDict
                     })
 
                 if only_first:break
