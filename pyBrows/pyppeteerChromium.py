@@ -83,7 +83,7 @@ class Headless(Interface):
         self._browser = await launch(options)
         self._page = await self._browser.newPage()
         self._page.setDefaultNavigationTimeout(self._timeout)
-        await self._page.setViewport({"width":960,"height":800})
+        await self._page.setViewport({"width":1366,"height":768})
         await self._page.setUserAgent(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) "\
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
@@ -236,12 +236,27 @@ class Headless(Interface):
         value=await self._page.evaluateHandle(js_content)
         self._handles[js_id]=value
 
-    async def async_evaluate_onElement(self, xpath_pattern, js_content):
+    async def async_evaluate_onElement(self, xpath_pattern, js_content,
+                                                    only_visible=False):
         """
+        """
+        only_visible="""
+        function(element) {
+            var rect=element.getBoundingClientRect();
+            if (rect.height ==0 || rect.width==0){
+                return 0
+            }
+            return 1
+        }
         """
         elements=await self._page.xpath(xpath_pattern)
-        if elements:
-            value = await self._page.evaluate(js_content,elements[0])
+        if not elements: return
+        for element in elements:
+            if only_visible:
+                is_visible = await self._page.evaluate(only_visible,
+                                                            element)
+                if not is_visible:continue
+            value = await self._page.evaluate(js_content,element)
             self._results[self._page.url].append({
                 "value":value,
                 "target_value":None,
@@ -249,6 +264,7 @@ class Headless(Interface):
                 "js_id":None,
                 "index":0,
             })
+            break
 
     async def async_evaluate_onElements(self, xpath_pattern, js_content):
         """
