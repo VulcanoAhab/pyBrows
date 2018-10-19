@@ -80,6 +80,7 @@ class Headless(Interface):
             options["executablePath"]=self._binary
         if self._user_data_dir:
             options["userDataDir"]=self._user_data_dir
+        if self._browser:return
         self._browser = await launch(options)
         self._page = await self._browser.newPage()
         self._page.setDefaultNavigationTimeout(self._timeout)
@@ -309,6 +310,12 @@ class Headless(Interface):
                 "js_id":None,
                 "index":n,
             })
+
+    async def async_input_text(self, css_selector, input_value):
+        """
+        """
+        await self._page.focus(css_selector)
+        await self._page.keyboard.type(input_value)
 
     def results_by_selector(self, selector_pattern):
         """
