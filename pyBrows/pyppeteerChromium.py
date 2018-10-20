@@ -91,6 +91,12 @@ class Headless(Interface):
             "Safari/537.36")
 
     @property
+    def clean_results(self):
+        """
+        """
+        self._results=collections.defaultdict(list)
+
+    @property
     def currentUrl(self):
         """
         """
@@ -122,6 +128,11 @@ class Headless(Interface):
             await self._page.close()
         self._page = await self._browser.newPage()
         self._page.setDefaultNavigationTimeout(self._timeout)
+
+    async def async_reload(self):
+        """
+        """
+        await self._page.reload()
 
     async def async_page_source(self):
         """
@@ -163,6 +174,11 @@ class Headless(Interface):
         """
         """
         await self._page.goBack()
+
+    async def async_move_mouse(self,x,y):
+        """
+        """
+        await self._page.mouse.move(x,y)
 
     async def async_click_onElement(self, xpath_pattern,
                                           not_hrefs=[],
