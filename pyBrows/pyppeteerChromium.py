@@ -162,6 +162,7 @@ class Headless(Interface):
         """
         """
         for target in self._browser.targets():
+            if target.url == self.last_get_url:continue
             if target.type not in ["background_page", "page"]:continue
             self._killNew_tabs.append(target.url)
             page= await target.page()
