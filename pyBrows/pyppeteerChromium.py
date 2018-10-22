@@ -28,8 +28,11 @@ class Headless(Interface):
         self._source={}
         self._cookies={}
         self._handles={}
+        self._abortUrls=[]
         self._browser=None
         self._arguments=args
+        self._killNew_tabs=[]
+        self.last_get_url=None
         self._proxy=kwargs.get("proxy")
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
@@ -120,6 +123,81 @@ class Headless(Interface):
            self.page_source()
         return self._source[self._page.url]
 
+    async def async_get_all_pages(self):
+        """
+        """
+        self._pages=await self._browser.pages()
+
+    def get_contexts(self):
+        """
+        """
+        return self._browser.browserContexts
+
+    def prevent_new_tabs(self):
+        """
+        """
+        async def _killNew(target):
+            """
+            """
+            #kill new
+            if target.type  in  ["page", "background_page"]:
+                self._killNew_tabs.append(target.url)
+                page=await target.page()
+                await page.close()
+        #create listener
+        defaultContext = self._browser.browserContexts[0]
+        defaultContext.on('targetcreated',
+            lambda t: asyncio.ensure_future(_killNew(t)))
+
+    async def async_focus_on_request_tab(self):
+        """
+        """
+        for target in self._browser.targets():
+            if target.url == self.last_get_url:
+                page= await target.page()
+                await page.bringToFront()
+                break
+
+    async def async_kill_extra_tabs(self):
+        """
+        """
+        for target in self._browser.targets():
+            if target.type not in ["background_page", "page"]:continue
+            self._killNew_tabs.append(target.url)
+            page= await target.page()
+            await page.close()
+            time.sleep(0.0001)
+
+    def __abort_requests(self, filterFn, req):
+        """
+        """
+        async def wrapper_abort(req):
+            """
+            """
+            if filterFn(req.url):
+                await req.abort()
+                self._abortUrls.append(req.url)
+            else:
+                await req.continue_()
+        return wrapper_abort(req)
+
+    async def async_intercept_requests(self):
+        """
+        """
+        await self._page.setRequestInterception(True)
+
+    def abort_requests(self, filterFn):
+        """
+        filterFn -> Boolean
+         True means abort
+        """
+        partial_abort=partial(self.__abort_requests, filterFn)
+        self._page.on("request", partial_abort)
+
+    async def remove_page_listener(self, listener):
+        """
+        """
+        await self._page.removeListener(listener)
 
     async def async_renew_page(self):
         """
@@ -169,16 +247,33 @@ class Headless(Interface):
         """
         """
         await self._page.goto(targetUri, options)
+        self.last_get_url=targetUri
 
     async def async_go_back(self):
         """
         """
         await self._page.goBack()
 
-    async def async_move_mouse(self,x,y):
+    async def async_mouse_move(self,x,y):
         """
         """
         await self._page.mouse.move(x,y)
+
+    async def async_mouse_click(self,x,y, button="left"):
+        """
+        """
+        error_count=0
+        while True:
+            try:
+                await self._page.mouse.click(x,y, {"buton":button})
+            except pyppeteer.errors.NetworkError:
+                if error_count >= 3:break
+                await asyncio.sleep(0.5)
+                error_count+=1
+                continue
+            except asyncio.base_futures.InvalidStateError:
+                pass
+            break
 
     async def async_click_onElement(self, xpath_pattern,
                                           not_hrefs=[],
@@ -348,6 +443,12 @@ class Headless(Interface):
     async def async_close(self):
         """
         """
-        if not self._page.isClosed():
-            await self._page.close()
-        await self._browser.close()
+
+        try:
+            pages=await self._browser.pages()
+            for page in pages:
+                if not page.isClosed:
+                    page.close()
+            await self._browser.close()
+        except Exception as e:
+            await self._browser.close()
