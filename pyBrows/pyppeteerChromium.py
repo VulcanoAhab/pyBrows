@@ -28,11 +28,13 @@ class Headless(Interface):
         self._source={}
         self._cookies={}
         self._handles={}
+        self._scripts=[]
         self._abortUrls=[]
         self._browser=None
         self._arguments=args
         self._killNew_tabs=[]
         self.last_get_url=None
+        self._requests_archive=[]
         self._proxy=kwargs.get("proxy")
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
@@ -123,30 +125,30 @@ class Headless(Interface):
            self.page_source()
         return self._source[self._page.url]
 
-    async def async_get_all_pages(self):
-        """
-        """
-        self._pages=await self._browser.pages()
-
+    @property
     def get_contexts(self):
         """
         """
         return self._browser.browserContexts
 
-    def prevent_new_tabs(self):
+    async def async_get_all_pages(self):
+        """
+        """
+        self._pages=await self._browser.pages()
+
+    async def async_prevent_new_tabs(self):
         """
         """
         async def _killNew(target):
             """
             """
-            #kill new
             if target.type  in  ["page", "background_page"]:
                 self._killNew_tabs.append(target.url)
                 page=await target.page()
                 await page.close()
         #create listener
         defaultContext = self._browser.browserContexts[0]
-        defaultContext.on('targetcreated',
+        defaultContext.on("targetcreated",
             lambda t: asyncio.ensure_future(_killNew(t)))
 
     async def async_focus_on_request_tab(self):
@@ -169,10 +171,17 @@ class Headless(Interface):
             await page.close()
             time.sleep(0.0001)
 
-    def __abort_requests(self, filterFn, req):
+    async def async_intercept_requests(self):
         """
         """
-        async def wrapper_abort(req):
+        await self._page.setRequestInterception(True)
+
+    async def async_abort_requests(self, filterFn):
+        """
+        filterFn -> Boolean
+         True means abort
+        """
+        async def test_request(req):
             """
             """
             if filterFn(req.url):
@@ -180,20 +189,14 @@ class Headless(Interface):
                 self._abortUrls.append(req.url)
             else:
                 await req.continue_()
-        return wrapper_abort(req)
+        self._page.on("request",
+            lambda req: asyncio.ensure_future(test_request(req)))
 
-    async def async_intercept_requests(self):
+    async def async_monitor_requests(self):
         """
         """
-        await self._page.setRequestInterception(True)
-
-    def abort_requests(self, filterFn):
-        """
-        filterFn -> Boolean
-         True means abort
-        """
-        partial_abort=partial(self.__abort_requests, filterFn)
-        self._page.on("request", partial_abort)
+        self._page.on("request",
+            lambda req: self._requests_archive.append(req.url))
 
     async def remove_page_listener(self, listener):
         """
@@ -333,10 +336,10 @@ class Headless(Interface):
                 "selector":xpath_pattern,
                 })
 
-    async def async_evaluate(self, js_content, js_id):
+    async def async_evaluate(self, js_content, js_id, **kwargs):
         """
         """
-        value = await self._page.evaluate(js_content)
+        value = await self._page.evaluate(js_content, **kwargs)
         self._results[self._page.url].append({
             "value":value,
             "js_id":js_id,
@@ -393,6 +396,13 @@ class Headless(Interface):
                     "js_id":None,
                     "index":n,
                 })
+
+    async def async_addScriptTag(self, optionsDict, **kwargs):
+        """
+        """
+        await self._page.addScriptTag(optionsDict, **kwargs)
+        self._scripts.append(optionsDict)
+
 
     async def async_xpath(self, xpath_pattern, target_value=None):
         """
