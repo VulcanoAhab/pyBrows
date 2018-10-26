@@ -38,6 +38,7 @@ class Headless(Interface):
         self._proxy=kwargs.get("proxy")
         self._binary=kwargs.get("binaryPath")
         self._download=kwargs.get("downloadPath")
+        self._jQuery=kwargs.get("add_jquery", "")
         self._headless=kwargs.get("headless", True)
         self._user_data_dir=kwargs.get("user_data_dir")
         self._remote_debugging_port=kwargs.get("remote_debugging_port")
@@ -94,6 +95,8 @@ class Headless(Interface):
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) "\
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
             "Safari/537.36")
+        if self._jQuery:
+            self.addScriptTag({"url":self._jQuery})
 
     @property
     def clean_results(self):
