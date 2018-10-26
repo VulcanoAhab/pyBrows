@@ -96,7 +96,7 @@ class Headless(Interface):
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 "\
             "Safari/537.36")
         if self._jQuery:
-            self.addScriptTag({"url":self._jQuery})
+            await self._page.addScriptTag({"url":self._jQuery})
 
     @property
     def clean_results(self):
